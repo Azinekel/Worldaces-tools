@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>__TITLE__ - browser</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;margin:18px}
+    textarea{width:100%;height:280px;font-family:monospace}
+    .row{display:flex;gap:12px;align-items:center;margin-top:8px}
+    .col{flex:1}
+    canvas,img{max-width:100%;border:1px solid #ddd}
+  </style>
+</head>
+<body>
+  <h1>__TITLE__ - browser version</h1>
+  <p>Paste a JSON array (list of objects) or load a file, then click <em>Generate</em>.</p>
+
+  <div class="row">
+    <div class="col">
+      <label for="file">Load a JSON/CSV file: </label>
+      <input id="file" type="file" accept=".json,.csv" />
+    </div>
+    <div>
+      <button id="loadExample">Load example</button>
+    </div>
+  </div>
+
+  <textarea id="input" placeholder='[ { "amount": 100, "source": "Salary" }, ... ]'></textarea>
+
+  <div class="row">
+    <label>Theme: <select id="theme"><option>light</option><option>dark</option></select></label>
+    <button id="gen">Generate</button>
+  </div>
+
+  <h2>Result</h2>
+  <div id="output">No rendering yet</div>
+
+  <!-- Modal preview -->
+  <div id="previewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999;">
+    <div style="background:#fff;padding:12px;border-radius:8px;max-width:95%;max-height:95%;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px">
+        <strong id="modalTitle">Preview</strong>
+        <div>
+          <a id="downloadLink" href="#" download="ledger_bars.png" style="margin-right:8px;">Download PNG</a>
+          <button id="closeModal">Close</button>
+        </div>
+      </div>
+      <div style="text-align:center">
+        <img id="modalImage" src="" alt="preview" style="max-width:100%;height:auto;border:1px solid #ddd" />
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    const indexURL = 'https://cdn.jsdelivr.net/pyodide/v0.23.3/full/';
+    let pyodide = null;
+    let render_fn = null;
+
+    document.getElementById('file').addEventListener('change', async (ev)=>{
+      const f = ev.target.files[0];
+      if(!f) return;
+      const txt = await f.text();
+      if(f.name.toLowerCase().endsWith('.csv')){
+        const lines = txt.split(/\r?\n/).filter(Boolean);
+        const headers = lines.shift().split(/,|;|\t/).map(h=>h.trim());
+        const arr = lines.map(l=>{
+          const cols = l.split(/,|;|\t/);
+          const obj = {};
+          headers.forEach((h,i)=>obj[h]=cols[i]===undefined?"":cols[i]);
+          return obj;
+        });
+        document.getElementById('input').value = JSON.stringify(arr, null, 2);
+      } else {
+        document.getElementById('input').value = txt;
+      }
+    });
+
+    document.getElementById('loadExample').addEventListener('click', ()=>{
+      fetch('__EXAMPLE_PATH__').then(r=>r.text()).then(t=>document.getElementById('input').value=t).catch(()=>{
+        document.getElementById('input').value = JSON.stringify([
+          {"amount": 1000, "source": "Salary"},
+          {"amount": -120, "source": "Groceries"},
+          {"amount": -60, "source": "Transport"},
+          {"amount": 200, "source": "Freelance"}
+        ], null, 2);
+      })
+    });
+
+    async function ensurePyodide(){
+      if(pyodide) return;
+      const load = document.createElement('div');
+      load.id='loading';
+      load.textContent = 'Loading Pyodide and matplotlib... (first load ~30-40 MB)';
+      document.body.prepend(load);
+      pyodide = await loadPyodide({indexURL});
+      await pyodide.loadPackage(['micropip']);
+      await pyodide.loadPackage(['matplotlib']);
+      const pyCode = await (await fetch('__PY_PATH__')).text();
+      pyodide.runPython(pyCode);
+      render_fn = pyodide.globals.get('render_from_json');
+      load.remove();
+    }
+
+    document.getElementById('gen').addEventListener('click', async ()=>{
+      try{
+        await ensurePyodide();
+        const txt = document.getElementById('input').value.trim();
+        if(!txt){ alert('Enter JSON or load a file'); return; }
+        const theme = document.getElementById('theme').value;
+        const pyres = render_fn(txt, theme, null, null, "", 150);
+        const b64 = pyres.toString();
+        // show in modal instead of inline
+        showPreview(`data:image/png;base64,${b64}`);
+        pyres.destroy && pyres.destroy();
+      }catch(e){
+        console.error(e);
+        alert('Error: '+e);
+      }
+    });
+
+    function showPreview(dataUrl){
+      const modal = document.getElementById('previewModal');
+      const img = document.getElementById('modalImage');
+      const dl = document.getElementById('downloadLink');
+      img.src = dataUrl;
+      dl.href = dataUrl;
+      modal.style.display = 'flex';
+    }
+    document.getElementById('closeModal').addEventListener('click', ()=>{
+      const modal = document.getElementById('previewModal');
+      modal.style.display = 'none';
+      document.getElementById('modalImage').src = '';
+    });
+
+    (function(){
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/pyodide/v0.23.3/full/pyodide.js';
+      s.onload = ()=>console.log('pyodide script loaded');
+      document.head.appendChild(s);
+    })();
+  </script>
+</body>
+</html>

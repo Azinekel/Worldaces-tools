@@ -4,5 +4,6 @@
   "author": "Gutek",
   "tags": ["visualization", "economy"],
   "entrypoint": "ledger_bars.py",
-  "runnable_in_browser": false
+  "runnable_in_browser": true,
+  "browser_entry": "browser.py"
 }
