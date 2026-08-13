@@ -1,0 +1,147 @@
+{
+    "transactions": [
+        {
+            "transactionId": "76049371-3e33-4dce-862b-793bf6aae563",
+            "amount": 150,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-13T19:31:30.095Z"
+        },
+        {
+            "transactionId": "7949e9a9-73b1-4081-b966-628f72720cb1",
+            "amount": 150,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-13T15:01:10.720Z"
+        },
+        {
+            "transactionId": "fd174410-8afe-456d-a94b-c6f9fab2e6c9",
+            "amount": 150,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-13T10:31:03.239Z"
+        },
+        {
+            "transactionId": "10854346-8f57-4783-9aa3-d96ecb086085",
+            "amount": 50,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:29:33.401Z"
+        },
+        {
+            "transactionId": "cfbff41a-360d-46cb-9fd2-d9ec4efe3564",
+            "amount": 50,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:29:33.401Z"
+        },
+        {
+            "transactionId": "f6a71bc9-b771-4e03-9fd2-6df37f8ab730",
+            "amount": 1000,
+            "type": "EXPENSE",
+            "sourceType": "GACHA_PULL",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "17cb250c-842d-4d8d-ae18-4ed791c914ae",
+            "amount": 5,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "a879bece-5ca5-4e13-bf6d-4c0353c711d8",
+            "amount": 15,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "4c48123e-7f9e-4017-bb44-8234cef926d9",
+            "amount": 5,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "a761e4a6-040f-4238-9b8f-1a10b0df5adb",
+            "amount": 15,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "29e60008-4f2c-44e3-b139-438267bfe4aa",
+            "amount": 5,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "2cae7e50-6d4b-44ee-a312-c51b62a6c3f4",
+            "amount": 15,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "667dd18a-dfff-4d6d-b2f5-bb06386dbb48",
+            "amount": 5,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "b2682b5b-892f-4aae-bc8b-437b3e8f0983",
+            "amount": 5,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "31b00c40-5fc5-409e-8b52-d9add653ae51",
+            "amount": 5,
+            "type": "INCOME",
+            "sourceType": "PLAYER_DISMISS",
+            "createdAt": "2026-08-13T06:26:26.678Z"
+        },
+        {
+            "transactionId": "8ada0b3e-87b6-42d8-a78a-4bb1b48b3279",
+            "amount": 150,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-13T06:01:02.395Z"
+        },
+        {
+            "transactionId": "28747d8c-a1ab-45a7-8f60-219bd747488b",
+            "amount": 50,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-13T01:31:30.803Z"
+        },
+        {
+            "transactionId": "2cc8122a-5404-4b8b-b5e8-483a28853fd3",
+            "amount": 150,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-12T21:00:53.379Z"
+        },
+        {
+            "transactionId": "598ff01f-56b1-4c3e-ab13-e3330db28651",
+            "amount": 150,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-12T16:31:38.351Z"
+        },
+        {
+            "transactionId": "5d9c8154-b098-4368-8e52-b9cdf07fd193",
+            "amount": 150,
+            "type": "INCOME",
+            "sourceType": "MATCH_REWARD",
+            "createdAt": "2026-08-12T12:02:15.361Z"
+        }
+    ],
+    "total": 1449,
+    "page": 1,
+    "limit": 20
+}

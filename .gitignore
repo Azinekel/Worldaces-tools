@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+*.png
+!tools/**/example_output.png
