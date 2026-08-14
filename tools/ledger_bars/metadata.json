@@ -1,7 +1,7 @@
 {
   "name": "ledger_bars",
   "description": "Income vs expense bar chart from a JSON/CSV transaction export",
-  "author": "Gutek",
+  "author": "@Gutek5154",
   "tags": ["visualization", "economy"],
   "entrypoint": "ledger_bars.py",
   "runnable_in_browser": true,

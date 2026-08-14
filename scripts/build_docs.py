@@ -2,7 +2,11 @@
 """Generate docs/index.html by listing all tools in tools/*.
 
 Reads tools/<x>/metadata.json when it exists (otherwise it just uses the folder name) and produces a
-simple static page. Called by the `.github/workflows/pages.yml` workflow on each push to main.
+static page. Called by the `.github/workflows/pages.yml` workflow on each push to main.
+
+Design: "scoreboard" identity shared with the per-tool pages — dark hardwood-court background,
+amber readout accent, condensed display type for headings, monospace for numbers/stats/labels.
+Keep this in sync with any per-tool `browser.html` if you touch the palette/type tokens below.
 """
 from __future__ import annotations
 
@@ -15,26 +19,110 @@ TOOLS_DIR = ROOT / "tools"
 DOCS_DIR = ROOT / "docs"
 DOCS_PY = DOCS_DIR / "py"
 
+# ── shared design tokens ────────────────────────────────────────────────────
+# bg #0f141b · surface #161d27 · line #232c38 · ink #eef2f6 · ink2 #93a1b3
+# accent (readout amber) #ffb545 · accent2 (ball orange) #ff6a3d
+BASE_STYLE = """
+    :root{
+        --bg:#0f141b; --surface:#161d27; --surface2:#1b2431; --line:#232c38;
+        --ink:#eef2f6; --ink2:#93a1b3; --ink3:#5e6b7c;
+        --amber:#ffb545; --orange:#ff6a3d;
+    }
+    *{box-sizing:border-box}
+    body{
+        font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+        background:var(--bg); color:var(--ink); margin:0; padding:0 1.25rem 4rem;
+        background-image:
+            repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 120px);
+    }
+    .wrap{max-width:840px; margin:0 auto}
+    .kicker{
+        font-family:'JetBrains Mono',ui-monospace,monospace; font-size:0.72rem; letter-spacing:0.16em;
+        text-transform:uppercase; color:var(--amber); margin:2.6rem 0 0.6rem;
+    }
+    h1{
+        font-family:'Oswald',system-ui,sans-serif; font-weight:600; text-transform:uppercase;
+        letter-spacing:0.01em; font-size:clamp(2rem,5vw,2.9rem); margin:0 0 0.5rem; line-height:1.05;
+    }
+    .sub{color:var(--ink2); margin:0 0 1.6rem; font-size:1rem; max-width:56ch; line-height:1.5}
+    .net{
+        height:10px; margin:0.4rem 0 2.2rem;
+        background:
+            repeating-linear-gradient(45deg, transparent 0 9px, var(--line) 9px 10px),
+            repeating-linear-gradient(-45deg, transparent 0 9px, var(--line) 9px 10px);
+        border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+        opacity:0.8;
+    }
+    a{color:var(--amber); text-decoration:none}
+    a:hover{text-decoration:underline}
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible{
+        outline:2px solid var(--amber); outline-offset:2px;
+    }
+    footer{
+        margin-top:3rem; padding-top:1.2rem; border-top:1px solid var(--line);
+        font-family:'JetBrains Mono',ui-monospace,monospace; font-size:0.78rem; color:var(--ink3);
+        display:flex; gap:1.2rem; flex-wrap:wrap;
+    }
+    footer a{color:var(--ink2); margin-right:1.2rem}
+    footer a:last-child{margin-right:0}
+    @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
+"""
+
+FONT_LINKS = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+    '<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&'
+    'family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
+)
+
 INDEX_TEMPLATE = """<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>WorldAces Community Tools</title>
+<meta name="description" content="Community-built tools for the WorldAces volleyball sim — scripts, charts and browser utilities, no install required.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{font_links}
 <style>
-    body {{ font-family: system-ui, sans-serif; max-width: 780px; margin: 3rem auto; padding: 0 1rem; color: #1a1f26; }}
-    h1 {{ margin-bottom: 0.2rem; }}
-    .sub {{ color: #5a6472; margin-top: 0; }}
-    .card {{ border: 1px solid #e2e6eb; border-radius: 10px; padding: 1rem 1.2rem; margin: 1rem 0; }}
-    .card h2 {{ margin: 0 0 0.3rem 0; font-size: 1.1rem; }}
-    .tags span {{ display: inline-block; background: #eef1f5; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.78rem; margin-right: 0.3rem; color: #444; }}
-    a {{ color: #2a67c9; }}
+{base_style}
+    .grid{{display:grid; gap:0.9rem}}
+    .card{{
+        position:relative; background:var(--surface); border:1px solid var(--line); border-radius:10px;
+        padding:1.1rem 1.3rem 1.1rem 1.5rem; overflow:hidden;
+    }}
+    .card::before{{
+        content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--orange);
+    }}
+    .card h2{{margin:0 0 0.35rem; font-family:'Oswald',sans-serif; font-weight:600; font-size:1.25rem; text-transform:uppercase; letter-spacing:0.01em}}
+    .card h2 a{{color:var(--ink)}}
+    .card h2 a:hover{{color:var(--amber); text-decoration:none}}
+    .card p{{margin:0 0 0.7rem; color:var(--ink2); font-size:0.94rem; line-height:1.45}}
+    .tags{{display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.5rem}}
+    .tags span{{
+        font-family:'JetBrains Mono',monospace; font-size:0.68rem; letter-spacing:0.04em; text-transform:uppercase;
+        background:var(--surface2); border:1px solid var(--line); color:var(--ink2);
+        border-radius:999px; padding:0.22rem 0.6rem;
+    }}
+    .byline{{font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--ink3)}}
+    .byline b{{color:var(--amber); font-weight:500}}
+    .open{{font-family:'JetBrains Mono',monospace; font-size:0.8rem}}
 </style>
 </head>
 <body>
-<h1>WorldAces Community Tools</h1>
-<p class="sub">Tools shared by the community. Click a tool for instructions.</p>
+<div class="wrap">
+<p class="kicker">WorldAces &middot; community</p>
+<h1>Community Tools</h1>
+<p class="sub">Scripts and browser utilities built by players, for players. Pick a tool below\neach one runs on its own, no account needed.</p>
+<div class="net" aria-hidden="true"></div>
+<div class="grid">
 {cards}
+</div>
+<footer>
+    <a href="https://github.com/{repo}">Repository</a>
+    <a href="https://github.com/{repo}/blob/main/CONTRIBUTING.md">Share a tool</a>
+    <a href="https://github.com/{repo}/blob/main/LICENSE">MIT license</a>
+</footer>
+</div>
 </body>
 </html>
 """
@@ -43,7 +131,7 @@ CARD_TEMPLATE = """<div class="card">
     <h2><a href="{tool_page}">{name}</a></h2>
     <p>{description}</p>
     <div class="tags">{tags}</div>
-    <p><small>by {author}</small></p>
+    <p class="byline">by <b>{author}</b> &middot; <a class="open" href="{tool_page}">open tool &rarr;</a></p>
 </div>
 """
 
@@ -52,38 +140,49 @@ PER_TOOL_HTML = """<!doctype html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>__TITLE__ — Browser</title>
+    <title>__TITLE__ &mdash; WorldAces tools</title>
+""" + FONT_LINKS + """
     <style>
-        body{{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;margin:18px}}
-        textarea{{width:100%;height:280px;font-family:monospace}}
-        .row{{display:flex;gap:12px;align-items:center;margin-top:8px}}
-        .col{{flex:1}}
-        canvas,img{{max-width:100%;border:1px solid #ddd}}
+""" + BASE_STYLE + """
+        textarea{
+            width:100%; min-height:220px; font-family:'JetBrains Mono',monospace; font-size:0.85rem;
+            background:var(--surface2); color:var(--ink); border:1px solid var(--line); border-radius:8px;
+            padding:0.8rem; resize:vertical;
+        }
+        .row{display:flex; gap:0.7rem; align-items:center; margin-top:0.7rem; flex-wrap:wrap}
+        button, .btn{
+            font-family:'Inter',sans-serif; font-weight:600; font-size:0.88rem; letter-spacing:0.01em;
+            background:var(--amber); color:#241505; border:none; border-radius:7px; padding:0.6rem 1.1rem;
+            cursor:pointer;
+        }
+        button.secondary{background:transparent; color:var(--ink2); border:1px solid var(--line)}
+        select{background:var(--surface2); color:var(--ink); border:1px solid var(--line); border-radius:7px; padding:0.4rem 0.6rem}
+        canvas,img{max-width:100%; border:1px solid var(--line); border-radius:8px}
     </style>
 </head>
 <body>
-    <h1>__TITLE__ - browser version</h1>
-    <p>Paste a JSON array (list of objects) or load a file, then click <em>Generate</em>.</p>
+    <div class="wrap">
+    <p class="kicker">WorldAces &middot; __TITLE__</p>
+    <h1>__TITLE__</h1>
+    <p class="sub">Paste a JSON array (list of objects) or load a file, then click <em>Generate</em>.</p>
+    <div class="net" aria-hidden="true"></div>
 
     <div class="row">
-        <div class="col">
-            <label for="file">Load a JSON/CSV file: </label>
-            <input id="file" type="file" accept=".json,.csv" />
-        </div>
-        <div>
-            <button id="loadExample">Load example</button>
-        </div>
+        <label for="file">Load a JSON/CSV file: </label>
+        <input id="file" type="file" accept=".json,.csv" />
+        <button class="secondary" id="loadExample" type="button">Load example</button>
     </div>
 
     <textarea id="input" placeholder='[ { "amount": 100, "source": "Salary" }, ... ]'></textarea>
 
     <div class="row">
         <label>Theme: <select id="theme"><option>light</option><option>dark</option></select></label>
-        <button id="gen">Generate</button>
+        <button id="gen" type="button">Generate</button>
     </div>
 
-    <h2>Result</h2>
+    <h2 style="font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:1.1rem;margin-top:2rem">Result</h2>
     <div id="output">No rendering yet</div>
+    </div>
 
     <script type="module">
         const indexURL = 'https://cdn.jsdelivr.net/pyodide/v0.23.3/full/';
@@ -95,10 +194,10 @@ PER_TOOL_HTML = """<!doctype html>
             if(!f) return;
             const txt = await f.text();
             if(f.name.toLowerCase().endsWith('.csv')){
-                const lines = txt.split(/\r?\n/).filter(Boolean);
-                const headers = lines.shift().split(/,|;|\t/).map(h=>h.trim());
+                const lines = txt.split(/\\r?\\n/).filter(Boolean);
+                const headers = lines.shift().split(/,|;|\\t/).map(h=>h.trim());
                 const arr = lines.map(l=>{
-                    const cols = l.split(/,|;|\t/);
+                    const cols = l.split(/,|;|\\t/);
                     const obj = {};
                     headers.forEach((h,i)=>obj[h]=cols[i]===undefined?"":cols[i]);
                     return obj;
@@ -109,7 +208,7 @@ PER_TOOL_HTML = """<!doctype html>
             }
         });
 
-            document.getElementById('loadExample').addEventListener('click', ()=>{
+        document.getElementById('loadExample').addEventListener('click', ()=>{
             fetch('__EXAMPLE_PATH__').then(r=>r.text()).then(t=>document.getElementById('input').value=t).catch(()=>{
                 document.getElementById('input').value = JSON.stringify([
                     {"amount": 1000, "source": "Salary"},
@@ -226,7 +325,9 @@ def main():
                         tags=tags, author=meta.get("author", "?"),
                 ))
 
-        (DOCS_DIR / "index.html").write_text(INDEX_TEMPLATE.format(cards="\n".join(cards)))
+        (DOCS_DIR / "index.html").write_text(
+                INDEX_TEMPLATE.format(cards="\n".join(cards), repo=repo, font_links=FONT_LINKS, base_style=BASE_STYLE)
+        )
         print(f"wrote docs/index.html with {len(cards)} tool(s)")
 
 

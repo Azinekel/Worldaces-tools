@@ -3,51 +3,163 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>__TITLE__ - browser</title>
+  <title>__TITLE__ &mdash; WorldAces tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;margin:18px}
-    textarea{width:100%;height:280px;font-family:monospace}
-    .row{display:flex;gap:12px;align-items:center;margin-top:8px}
-    .col{flex:1}
-    canvas,img{max-width:100%;border:1px solid #ddd}
+    :root{
+      --bg:#0f141b; --surface:#161d27; --surface2:#1b2431; --line:#232c38;
+      --ink:#eef2f6; --ink2:#93a1b3; --ink3:#5e6b7c;
+      --amber:#ffb545; --orange:#ff6a3d; --green:#3ecf8e; --red:#ff6767;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg); color:var(--ink); margin:0; padding:0 1.25rem 4rem;
+      background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 120px);
+    }
+    .wrap{max-width:840px; margin:0 auto}
+    .kicker{
+      font-family:'JetBrains Mono',ui-monospace,monospace; font-size:0.72rem; letter-spacing:0.16em;
+      text-transform:uppercase; color:var(--amber); margin:2.6rem 0 0.6rem;
+    }
+    h1{
+      font-family:'Oswald',system-ui,sans-serif; font-weight:600; text-transform:uppercase;
+      letter-spacing:0.01em; font-size:clamp(2rem,5vw,2.9rem); margin:0 0 0.5rem; line-height:1.05;
+    }
+    h2.section{
+      font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.02em;
+      font-size:1rem; color:var(--ink2); margin:2.2rem 0 0.8rem; display:flex; align-items:center; gap:0.6rem;
+    }
+    h2.section::after{content:""; flex:1; height:1px; background:var(--line)}
+    .sub{color:var(--ink2); margin:0 0 1.6rem; font-size:1rem; max-width:56ch; line-height:1.5}
+    .net{
+      height:10px; margin:0.4rem 0 2.2rem;
+      background:
+        repeating-linear-gradient(45deg, transparent 0 9px, var(--line) 9px 10px),
+        repeating-linear-gradient(-45deg, transparent 0 9px, var(--line) 9px 10px);
+      border-top:1px solid var(--line); border-bottom:1px solid var(--line); opacity:0.8;
+    }
+    a{color:var(--amber)}
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible{
+      outline:2px solid var(--amber); outline-offset:2px;
+    }
+    .panel{
+      background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:1.2rem 1.3rem;
+    }
+    .panel.notice{border-left:3px solid var(--orange)}
+    .panel.notice p{margin:0 0 0.7rem; color:var(--ink2); font-size:0.92rem; line-height:1.55}
+    .panel.notice p:last-child{margin-bottom:0}
+    .panel.notice strong{color:var(--ink)}
+    label{font-size:0.88rem; color:var(--ink2)}
+    input[type=text]{
+      width:100%; font-family:'JetBrains Mono',monospace; font-size:0.88rem;
+      background:var(--surface2); color:var(--ink); border:1px solid var(--line); border-radius:7px;
+      padding:0.65rem 0.8rem; margin-top:0.4rem;
+    }
+    textarea{
+      width:100%; min-height:220px; font-family:'JetBrains Mono',monospace; font-size:0.85rem;
+      background:var(--surface2); color:var(--ink); border:1px solid var(--line); border-radius:8px;
+      padding:0.8rem; resize:vertical;
+    }
+    .row{display:flex; gap:0.7rem; align-items:center; margin-top:0.9rem; flex-wrap:wrap}
+    button{
+      font-family:'Inter',sans-serif; font-weight:600; font-size:0.88rem; letter-spacing:0.01em;
+      background:var(--amber); color:#241505; border:none; border-radius:7px; padding:0.65rem 1.2rem;
+      cursor:pointer;
+    }
+    button:disabled{opacity:0.5; cursor:default}
+    button.secondary{background:transparent; color:var(--ink2); border:1px solid var(--line)}
+    select{background:var(--surface2); color:var(--ink); border:1px solid var(--line); border-radius:7px; padding:0.5rem 0.7rem}
+    .status{
+      font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--ink2); margin-top:0.9rem;
+      min-height:1.2em;
+    }
+    .status.err{color:var(--red)}
+    .status.ok{color:var(--green)}
+    .cmd{
+      display:flex; align-items:center; gap:0.6rem; background:var(--surface2); border:1px solid var(--line);
+      border-radius:7px; padding:0.7rem 0.9rem; margin:0.6rem 0 0.9rem; overflow-x:auto;
+    }
+    .cmd code{font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--amber); white-space:pre}
+    .cmd button{flex:none; padding:0.4rem 0.7rem; font-size:0.78rem}
+    .hint{font-size:0.8rem; color:var(--ink3); margin-top:0.5rem; line-height:1.5}
+    #output{margin-top:0.6rem}
+    canvas,img{max-width:100%; border:1px solid var(--line); border-radius:8px}
+    footer{
+      margin-top:3rem; padding-top:1.2rem; border-top:1px solid var(--line);
+      font-family:'JetBrains Mono',ui-monospace,monospace; font-size:0.78rem; color:var(--ink3);
+    }
+    footer a{color:var(--ink2); margin-right:1.2rem}
+    footer a:last-child{margin-right:0}
+
+    /* Modal preview */
+    #previewModal{display:none; position:fixed; inset:0; background:rgba(6,9,13,0.78); align-items:center; justify-content:center; z-index:9999}
+    .modalCard{background:var(--surface); border:1px solid var(--line); padding:14px; border-radius:10px; max-width:95%; max-height:95%; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+    .modalHead{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:10px}
+    .modalHead strong{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.02em}
+    #downloadLink{font-family:'JetBrains Mono',monospace; font-size:0.82rem; margin-right:10px}
+    @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
   </style>
 </head>
 <body>
-  <h1>__TITLE__ - browser version</h1>
-  <p>Paste a JSON array (list of objects) or load a file, then click <em>Generate</em>.</p>
+<div class="wrap">
+  <p class="kicker">WorldAces &middot; __TITLE__</p>
+  <h1>__TITLE__</h1>
+  <p class="sub">Two-panel income vs. expenditure chart, built from your WorldAces transaction ledger. Everything below runs in your browser &mdash; nothing you paste is uploaded anywhere.</p>
+  <div class="net" aria-hidden="true"></div>
 
-  <div class="row">
-    <div class="col">
+  <h2 class="section">Get your data</h2>
+  <div class="panel notice">
+    <p><strong>The WorldAces API doesn't allow direct browser requests</strong> (no CORS headers), so
+      this page can't fetch your transactions for you with just a token — the request gets blocked by
+      your browser before it even reaches api.worldaces.site.</p>
+    <p>Instead, run the CLI version once (it isn't subject to CORS) to fetch and page through your
+      ledger automatically, then either look at the PNG it writes directly or paste its JSON below:</p>
+    <div class="cmd">
+      <code id="cliCmd">python ledger_bars.py --token YOUR_BEARER_TOKEN --outjson transactions.json --out ledger.png</code>
+      <button type="button" id="copyCmd" class="secondary">Copy</button>
+    </div>
+    <p class="hint">Get the script from
+      <a href="https://github.com/Worldaces-community/Worldaces-tools/tree/main/tools/ledger_bars">the tool folder</a>
+      (also copyable as a single standalone file), install <code>matplotlib</code>, then swap in your
+      own bearer token. <code>--outjson</code> writes the raw transactions so you can paste them below
+      too. Add <code>--theme dark</code> if you'd rather match this page.</p>
+  </div>
+
+  <h2 class="section">Paste JSON</h2>
+  <div class="panel">
+    <div class="row">
       <label for="file">Load a JSON/CSV file: </label>
       <input id="file" type="file" accept=".json,.csv" />
+      <button class="secondary" id="loadExample" type="button">Load example</button>
     </div>
-    <div>
-      <button id="loadExample">Load example</button>
+    <textarea id="input" placeholder='[ { "amount": 100, "source": "Salary" }, ... ]'></textarea>
+    <div class="row">
+      <label>Theme: <select id="theme"><option>light</option><option>dark</option></select></label>
+      <button id="gen" type="button">Generate</button>
     </div>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
   </div>
 
-  <textarea id="input" placeholder='[ { "amount": 100, "source": "Salary" }, ... ]'></textarea>
-
-  <div class="row">
-    <label>Theme: <select id="theme"><option>light</option><option>dark</option></select></label>
-    <button id="gen">Generate</button>
-  </div>
-
-  <h2>Result</h2>
-  <div id="output">No rendering yet</div>
+  <footer>
+    <a href="https://github.com/Worldaces-community/Worldaces-tools/tree/main/tools/ledger_bars">Source &amp; CLI version</a>
+  </footer>
+</div>
 
   <!-- Modal preview -->
-  <div id="previewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999;">
-    <div style="background:#fff;padding:12px;border-radius:8px;max-width:95%;max-height:95%;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px">
+  <div id="previewModal">
+    <div class="modalCard">
+      <div class="modalHead">
         <strong id="modalTitle">Preview</strong>
         <div>
-          <a id="downloadLink" href="#" download="ledger_bars.png" style="margin-right:8px;">Download PNG</a>
-          <button id="closeModal">Close</button>
+          <a id="downloadLink" href="#" download="ledger_bars.png">Download PNG</a>
+          <button id="closeModal" type="button" class="secondary">Close</button>
         </div>
       </div>
       <div style="text-align:center">
-        <img id="modalImage" src="" alt="preview" style="max-width:100%;height:auto;border:1px solid #ddd" />
+        <img id="modalImage" src="" alt="preview" style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px" />
       </div>
     </div>
   </div>
@@ -56,6 +168,23 @@
     const indexURL = 'https://cdn.jsdelivr.net/pyodide/v0.23.3/full/';
     let pyodide = null;
     let render_fn = null;
+
+    const statusEl = document.getElementById('status');
+    function setStatus(msg, kind){
+      statusEl.textContent = msg;
+      statusEl.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    document.getElementById('copyCmd').addEventListener('click', async ()=>{
+      const txt = document.getElementById('cliCmd').textContent;
+      try{
+        await navigator.clipboard.writeText(txt);
+        const btn = document.getElementById('copyCmd');
+        const prev = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(()=>{ btn.textContent = prev; }, 1400);
+      }catch(e){ /* clipboard may be unavailable; the command is still selectable text */ }
+    });
 
     document.getElementById('file').addEventListener('change', async (ev)=>{
       const f = ev.target.files[0];
@@ -89,33 +218,34 @@
 
     async function ensurePyodide(){
       if(pyodide) return;
-      const load = document.createElement('div');
-      load.id='loading';
-      load.textContent = 'Loading Pyodide and matplotlib... (first load ~30-40 MB)';
-      document.body.prepend(load);
+      setStatus('Loading Pyodide + matplotlib (first run, ~30-40 MB)...');
       pyodide = await loadPyodide({indexURL});
       await pyodide.loadPackage(['micropip']);
       await pyodide.loadPackage(['matplotlib']);
       const pyCode = await (await fetch('__PY_PATH__')).text();
       pyodide.runPython(pyCode);
       render_fn = pyodide.globals.get('render_from_json');
-      load.remove();
     }
 
     document.getElementById('gen').addEventListener('click', async ()=>{
+      const txt = document.getElementById('input').value.trim();
+      if(!txt){ setStatus('Enter JSON or load a file first.', 'err'); return; }
+      const btn = document.getElementById('gen');
+      btn.disabled = true;
       try{
         await ensurePyodide();
-        const txt = document.getElementById('input').value.trim();
-        if(!txt){ alert('Enter JSON or load a file'); return; }
         const theme = document.getElementById('theme').value;
+        setStatus('Rendering...');
         const pyres = render_fn(txt, theme, null, null, "", 150);
         const b64 = pyres.toString();
-        // show in modal instead of inline
         showPreview(`data:image/png;base64,${b64}`);
         pyres.destroy && pyres.destroy();
+        setStatus('Done.', 'ok');
       }catch(e){
         console.error(e);
-        alert('Error: '+e);
+        setStatus('Chart generation failed: ' + e, 'err');
+      }finally{
+        btn.disabled = false;
       }
     });
 
@@ -136,7 +266,6 @@
     (function(){
       const s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/pyodide/v0.23.3/full/pyodide.js';
-      s.onload = ()=>console.log('pyodide script loaded');
       document.head.appendChild(s);
     })();
   </script>

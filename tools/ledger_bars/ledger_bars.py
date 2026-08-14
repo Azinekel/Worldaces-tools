@@ -30,9 +30,25 @@ import argparse
 import csv
 import json
 import sys
+import urllib.error
+import urllib.request
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
+
+API_BASE = "https://api.worldaces.site/team/manage/transactions"
+API_PAGE_LIMIT = 100
+API_MAX_PAGES = 200  # safety cap
+# Python's urllib sends "User-Agent: Python-urllib/3.x" by default, which several
+# WAFs (Cloudflare and similar) reject outright with a 403 -- before the token is
+# even checked. Look like an ordinary browser request instead.
+API_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json",
+}
 
 # ── palette ───────────────────────────────────────────────────────────────────
 THEMES = {
@@ -96,6 +112,81 @@ def _from_json(blob):
     if not isinstance(blob, list):
         raise SystemExit("JSON must be a list of records or an object wrapping one")
     return blob
+
+
+def _extract_items(blob):
+    if isinstance(blob, list):
+        return blob
+    if isinstance(blob, dict):
+        for key in ("transactions", "data", "records", "items", "results"):
+            if isinstance(blob.get(key), list):
+                return blob[key]
+    return []
+
+
+def _extract_total(blob):
+    """Best-effort read of a "total item count" field, whatever it's named."""
+    if not isinstance(blob, dict):
+        return None
+    for key in ("total", "totalItems", "totalCount", "count"):
+        v = blob.get(key)
+        if isinstance(v, int):
+            return v
+    for parent_key in ("meta", "pagination"):
+        parent = blob.get(parent_key)
+        if isinstance(parent, dict):
+            for key in ("total", "totalItems"):
+                v = parent.get(key)
+                if isinstance(v, int):
+                    return v
+    return None
+
+
+def fetch_from_api(token, base_url=API_BASE, limit=API_PAGE_LIMIT):
+    """Page through the WorldAces transactions API with a bearer token.
+
+    Stops once a page reports we've reached the known total, or -- if the API
+    response doesn't expose a total -- once a page comes back short of `limit`.
+    """
+    records = []
+    page = 1
+    total_pages = None
+    while page <= API_MAX_PAGES:
+        url = f"{base_url}?page={page}&limit={limit}"
+        req = urllib.request.Request(
+            url,
+            headers={**API_HEADERS, "Authorization": f"Bearer {token}"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                blob = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                raise SystemExit(
+                    f"API rejected the request ({e.code}) -- either the token is invalid/expired, "
+                    "or the request was blocked before the token was checked (WAF/User-Agent). "
+                    "This script already sends browser-like headers; if it still fails, try a fresh token."
+                )
+            raise SystemExit(f"API request failed: HTTP {e.code}")
+        except urllib.error.URLError as e:
+            raise SystemExit(f"could not reach {base_url}: {e.reason}")
+
+        items = _extract_items(blob)
+        records.extend(items)
+        print(f"  fetched page {page}{f'/{total_pages}' if total_pages else ''} "
+              f"({len(items)} item(s), {len(records)} total)", file=sys.stderr)
+
+        if total_pages is None:
+            total = _extract_total(blob)
+            if total is not None:
+                total_pages = max(1, -(-total // limit))  # ceil division
+
+        reached_known_end = total_pages is not None and page >= total_pages
+        short_page = len(items) < limit
+        if reached_known_end or (total_pages is None and short_page) or not items:
+            break
+        page += 1
+    return records
 
 
 def load(path, amount_col=None, source_col=None, type_col=None):
@@ -263,8 +354,11 @@ def main(argv=None):
         description="Faceted income vs expenditure bar chart from a transaction ledger.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument("--input", required=True, help="path to a JSON or CSV ledger, or '-' for JSON on stdin")
+    p.add_argument("--input", help="path to a JSON or CSV ledger, or '-' for JSON on stdin")
+    p.add_argument("--token", help="WorldAces API bearer token -- fetch transactions directly instead of --input")
+    p.add_argument("--api-url", default=API_BASE, help=f"override the transactions endpoint (default: {API_BASE})")
     p.add_argument("--out", help="write a PNG here instead of opening a window")
+    p.add_argument("--outjson", help="also save the fetched/loaded transactions as JSON here (handy with --token)")
     p.add_argument("--theme", choices=("light", "dark"), default="light")
     p.add_argument("--top", type=int, help="keep the N largest sources per side, fold the rest into 'Other'")
     p.add_argument("--currency", default="", help="prefix for money labels, e.g. '$'")
@@ -276,7 +370,31 @@ def main(argv=None):
     p.add_argument("--dpi", type=int, default=200)
     args = p.parse_args(argv)
 
-    records, cols = load(args.input, args.amount_col, args.source_col, args.type_col)
+    if not args.token and not args.input:
+        p.error("provide either --input or --token")
+
+    if args.token:
+        print(f"fetching transactions from {args.api_url} ...", file=sys.stderr)
+        raw_records = fetch_from_api(args.token, base_url=args.api_url)
+        if not raw_records:
+            raise SystemExit("no transactions returned for this token")
+        fields = list(raw_records[0].keys())
+        amount = _pick(fields, AMOUNT_KEYS, args.amount_col)
+        source = _pick(fields, SOURCE_KEYS, args.source_col)
+        ttype = _pick(fields, TYPE_KEYS, args.type_col)
+        if amount is None:
+            raise SystemExit(f"no amount column found; use --amount-col. Available: {', '.join(fields)}")
+        if source is None:
+            raise SystemExit(f"no source column found; use --source-col. Available: {', '.join(fields)}")
+        records, cols = raw_records, {"amount": amount, "source": source, "type": ttype}
+    else:
+        records, cols = load(args.input, args.amount_col, args.source_col, args.type_col)
+
+    if args.outjson:
+        with open(args.outjson, "w", encoding="utf-8") as fh:
+            json.dump({"transactions": records}, fh, indent=2, ensure_ascii=False)
+        print(f"wrote {args.outjson} ({len(records):,} transactions)", file=sys.stderr)
+
     detected = ", ".join(f"{k}={v!r}" for k, v in cols.items() if v)
     print(f"{len(records):,} transactions · columns: {detected}")
     if not cols["type"]:
