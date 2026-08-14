@@ -11,7 +11,7 @@ and an example input file.
 
 | Tool | Description | Author |
 |---|---|---|
-| [`ledger_bars`](./tools/ledger_bars) | Two-panel bar chart of income vs expenses from a JSON/CSV transaction export | @author-original |
+| [`ledger_bars`](./tools/ledger_bars) | Two-panel bar chart of income vs expenses from a JSON/CSV transaction export | @Gutek |
 
 *(This table is updated whenever a new tool is accepted — see [CONTRIBUTING.md](./CONTRIBUTING.md).)*
 
