@@ -59,6 +59,8 @@ The script:
 5. Displays the first five rows.
 
 The complete dataset remains available in `df` for the following cells.
+<img width="1296" height="524" alt="1" src="https://github.com/user-attachments/assets/579087e1-658f-4ec7-b841-0ee8da28ff53" />
+<img width="1296" height="389" alt="2" src="https://github.com/user-attachments/assets/90fb8051-7d27-4b84-9dfd-aad0117f1e79" />
 
 ### Cell 2 — H2H Match Browser
 
@@ -67,10 +69,15 @@ Cell 2 uses the dataset already collected by Cell 1.
 Select an opponent, competition, and number of matches to view the H2H match history.
 
 No additional API requests are made by Cell 2.
+<img width="1296" height="524" alt="3" src="https://github.com/user-attachments/assets/dd7208e5-b115-4d29-b63a-c52981553204" />
 
 ### Cell 3 — H2H Summary
 
 Cell 3 generates the H2H statistics dashboard, including overall record, match statistics, totals, and competition breakdown.
+<img width="1296" height="405" alt="4" src="https://github.com/user-attachments/assets/12f10fc4-f4bf-450b-8915-09cf5004a94a" />
+<img width="1296" height="388" alt="7" src="https://github.com/user-attachments/assets/4797392d-f336-477c-8b6c-b5f1c1e726ae" />
+<img width="1296" height="410" alt="5" src="https://github.com/user-attachments/assets/76c3bf17-d678-4d06-a14f-1b06c1e841d6" />
+<img width="1296" height="524" alt="6" src="https://github.com/user-attachments/assets/cc9d6a84-e86a-4a3a-a812-912dd926cc68" />
 
 ## Important
 
