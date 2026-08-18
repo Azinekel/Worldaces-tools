@@ -20,7 +20,28 @@ You need:
 * Jupyter Notebook or JupyterLab
 * A valid World Aces Bearer token
 
-## Installation
+
+### 1. Install Python
+
+If you do not already have Python installed, download and install Python 3 from the official Python website.
+
+During installation on Windows, make sure to enable **Add Python to PATH**.
+
+### 2. Install Jupyter Notebook
+
+Open a terminal or command prompt and run:
+
+```bash
+pip install notebook
+```
+
+You can also install JupyterLab instead:
+
+```bash
+pip install jupyterlab
+```
+
+### 3. Install the project dependencies
 
 Open a terminal in the project folder and run:
 
@@ -28,13 +49,21 @@ Open a terminal in the project folder and run:
 pip install -r requirements.txt
 ```
 
-You can also install the packages from a notebook with:
+Alternatively, the packages can be installed from inside Jupyter Notebook with:
 
 ```python
 %pip install -r requirements.txt
 ```
 
 ## How to run
+
+Open a terminal in the project folder and run:
+
+```bash
+jupyter notebook
+```
+
+Jupyter will open in your web browser.
 
 Open:
 
