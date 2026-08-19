@@ -4,6 +4,6 @@
   "author": "@Azinekel",
   "tags": ["match", "h2h", "statistics"],
   "entrypoint": "H2HMatches.ipynb",
-  "runnable_in_browser": true,
+  "runnable_in_browser": false,
   "browser_entry": "H2HMatches.ipynb"
 }
